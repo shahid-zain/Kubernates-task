@@ -1,0 +1,43 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: joomla
+  labels:
+    app: joomla
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      env: test
+      app: joomla
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        env: test
+        app: joomla
+        tier: frontend
+    spec:
+      containers:
+      - image: joomla:3.9-php7.2-apache
+        name: joomla
+        env:
+        - name: JOOMLA_DB_HOST
+          value: mysql
+        - name: JOOMLA_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 80
+          name: joomla
+        volumeMounts:
+        - name: joomla-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: joomla-persistent-storage
+        persistentVolumeClaim:
+          claimName: jm-pv-claim
